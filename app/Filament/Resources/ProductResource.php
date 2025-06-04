@@ -31,11 +31,22 @@ class ProductResource extends Resource
             TextInput::make('stock')->numeric()->required(),
             TextInput::make('price')->numeric()->required(),
 
+            // FileUpload::make('image')
+            //     ->directory('products')
+            //     ->image()
+            //     ->disk('public')
+            //     ->nullable(),
+
             FileUpload::make('image')
-                ->directory('products')
-                ->image()
-                ->disk('public')
-                ->nullable(),
+                    ->label('Images')
+                    ->multiple()
+                    ->reorderable()
+                    ->directory('products')
+                    ->image()
+                    ->disk('public')
+                    ->maxFiles(5)
+                    ->nullable(),
+
 
             Select::make('category_id')
                 ->label('Category')
@@ -54,10 +65,15 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            ImageColumn::make('image')
-                ->label('Image')
-                ->disk('public')
-                ->height(50),
+            // ImageColumn::make('image')
+            //     ->label('Image')
+            //     ->disk('public')
+            //     ->height(50),
+
+            ImageColumn::make('image.0')
+                    ->label('Image')
+                    ->disk('public')
+                    ->height(50),
                 
 
             TextColumn::make('name')->searchable(),

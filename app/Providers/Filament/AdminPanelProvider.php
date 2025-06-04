@@ -26,9 +26,9 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('/')
             ->login()
-            ->renderHook( // ✅ Tambahan untuk custom logo
+            ->renderHook( 
                 'panels::sidebar.start',
                 fn () => view('filament.branding')
             )

@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('size')->nullable();
             $table->integer('stock')->default(0);
             $table->decimal('price', 10, 2);
-            $table->string('image')->nullable();
+            $table->json('image')->nullable();
+            // $table->string('image')->nullable();
 
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->foreignId('admin_id')->nullable()->constrained('admins')->onDelete('set null');

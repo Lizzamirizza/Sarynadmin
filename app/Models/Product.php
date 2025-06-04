@@ -23,6 +23,13 @@ class Product extends Model
     ];
 
     /**
+     * Cast image as array for multi-upload
+     */
+    protected $casts = [
+        'image' => 'array',
+    ];
+    
+    /**
      * Relasi ke kategori produk
      */
     public function category(): BelongsTo

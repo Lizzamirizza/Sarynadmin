@@ -9,28 +9,64 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     /**
-     * Mengambil semua produk yang tersedia beserta kategori, admin, dan gambar dari storage.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * Menampilkan daftar produk dengan pagination dan gambar dari storage.
      */
     public function index(Request $request)
     {
-        // Pagination settings
-        $perPage = $request->input('per_page', 8); // Default per_page is 8, can be set dynamically via query string
+        try {
+            $perPage = $request->input('per_page', 8);
 
-        // Retrieve products with related category, admin, and image URL (if available)
-        $products = Product::with(['category', 'admin'])
-            ->where('stock', '>', 0) // Only get products with available stock
-            ->paginate($perPage); // Paginate the results
+            $products = Product::with(['category', 'admin'])
+                ->where('stock', '>', 0)
+                ->paginate($perPage);
 
-        // Modify products to add full image URL (if needed)
-        $products->getCollection()->transform(function ($product) {
-            // Check if image exists and prepend the asset URL
-            $product->image = $product->image ? asset('storage/' . $product->image) : null; // Make sure to handle null image
-            return $product;
-        });
+            $products->getCollection()->transform(function ($product) {
+                // Pastikan image dalam bentuk array
+                $images = is_string($product->image)
+                    ? json_decode($product->image, true)
+                    : $product->image;
 
-        // Return products with pagination metadata
-        return response()->json($products);
+                // Ubah setiap path ke URL lengkap
+                $product->images = collect($images)->map(function ($img) {
+                    return $img ? asset('storage/' . $img) : null;
+                });
+
+                return $product;
+            });
+
+            return response()->json($products);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTrace(),
+            ], 500);
+        }
     }
-} 
+
+    /**
+     * Menampilkan detail produk berdasarkan ID.
+     */
+    public function show($id)
+    {
+        try {
+            $product = Product::with(['category', 'admin'])->findOrFail($id);
+
+            // Pastikan image dalam bentuk array
+            $images = is_string($product->image)
+                ? json_decode($product->image, true)
+                : $product->image;
+
+            // Ubah ke URL lengkap
+            $product->images = collect($images)->map(function ($img) {
+                return $img ? asset('storage/' . $img) : null;
+            });
+
+            return response()->json($product);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTrace(),
+            ], 500);
+        }
+    }
+}
