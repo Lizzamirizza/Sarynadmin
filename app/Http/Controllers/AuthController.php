@@ -17,6 +17,12 @@ class AuthController extends Controller
             'username' => 'required|string|max:255|unique:users,username',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
+            'address'    => 'required|string',
+            'province'  => 'required|string|max:100',
+            'city'      => 'required|string|max:100',
+            'subcity' => 'required|string|max:100',
+            'postalcode'  => 'required|string|max:10',
+            'phone'   => 'required|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -31,9 +37,13 @@ class AuthController extends Controller
             'username' => $request->username,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
+            'address'  => $request->address,
+            'province' => $request->province,
+            'city'     => $request->city,
+            'subcity'  => $request->subcity,
+            'postalcode'   => $request->postalcode,
+            'phone'    => $request->phone,
         ]);
-
-        
 
         return response()->json([
             'message' => 'Registrasi berhasil',
@@ -77,4 +87,10 @@ class AuthController extends Controller
             'message' => 'Logout berhasil',
         ]);
     }
+
+    public function me(Request $request)
+    {
+        return response()->json($request->user());
+    }
+
 }
