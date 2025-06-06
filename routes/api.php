@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RestockedController;
+use App\Http\Controllers\Api\MidtransController;
 
 
 // Route untuk tes autentikasi dengan Laravel Sanctum
@@ -43,4 +44,6 @@ Route::prefix('restockeds')->group(function () {
     Route::put('{id}', [RestockedController::class, 'update']);       
     Route::delete('{id}', [RestockedController::class, 'destroy']);   
 });
+
+Route::get('/midtrans/token/{orderId}', [MidtransController::class, 'getSnapToken']);
 
