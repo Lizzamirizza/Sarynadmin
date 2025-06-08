@@ -14,7 +14,15 @@ class CartController extends Controller
         $user = $request->user();
         $cartItems = $user->cartItems()->with('product')->get();
 
-        return response()->json(['cart' => $cartItems]);
+        return response()->json([
+    'cart' => $cartItems->map(function ($item) {
+        return [
+            'id' => $item->id, // ID dari cartItem, bukan produk
+            'product' => $item->product,
+            'quantity' => $item->quantity,
+        ];
+    }),
+]);
     }
 
     // Tambah item ke cart (jika sudah ada produk sama, update quantity)

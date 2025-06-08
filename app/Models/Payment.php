@@ -12,11 +12,15 @@ class Payment extends Model
 
     protected $fillable = [
         'order_id',
-        'payment_status',
-        'payment_date',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
         'amount',
+        'snap_token',
+        'status',               // pending, paid, failed, expired, dll
+        'payment_date',         // timestamp pembayaran sukses
         'midtrans_transaction_id',
-        'midtrans_status',
+        'midtrans_status',      // status dari Midtrans (capture, settlement, etc)
     ];
 
     /**

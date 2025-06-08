@@ -28,7 +28,7 @@ class PaymentResource extends Resource
                 ->relationship('order', 'id')
                 ->required(),
 
-            TextInput::make('payment_status')->required(),
+            TextInput::make('status')->required(),
             DateTimePicker::make('payment_date')->nullable(),
             TextInput::make('amount')->numeric()->required(),
             TextInput::make('midtrans_transaction_id')->nullable(),
@@ -41,7 +41,7 @@ class PaymentResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('order.id')->label('Order #'),
-                BadgeColumn::make('payment_status')->label('Status')->colors([
+                BadgeColumn::make('status')->label('Status')->colors([
                     'gray' => 'pending',
                     'success' => 'settlement',
                     'danger' => 'cancel',

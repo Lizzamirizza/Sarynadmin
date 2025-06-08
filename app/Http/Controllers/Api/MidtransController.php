@@ -2,26 +2,84 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Services\Midtrans\CreateSnapTokenService;
+use App\Models\Payment;
+use App\Services\MidtransService;
 
 class MidtransController extends Controller
 {
-    public function getSnapToken($orderId)
+    protected $midtrans;
+
+    public function __construct(MidtransService $midtrans)
     {
-        $order = Order::with('user', 'items')->findOrFail($orderId);
+        $this->midtrans = $midtrans;
+    }
 
-        if (!$order->number) {
-            $order->number = 'ORD-' . now()->format('Ymd') . '-' . str_pad(rand(0, 999), 3, '0', STR_PAD_LEFT);
-            $order->save();
-        }
+    // Buat Snap Token
+    public function createSnapToken(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|integer|exists:orders,id',
+            'amount' => 'required|numeric|min:1',
+            'name' => 'required|string',
+            'email' => 'required|email',
+            'phone' => 'nullable|string',
+        ]);
 
-        $snapToken = (new CreateSnapTokenService($order))->getSnapToken();
+        $payment = Payment::updateOrCreate(
+            ['order_id' => $request->order_id],
+            [
+                'amount' => $request->amount,
+                'customer_name' => $request->name,
+                'customer_email' => $request->email,
+                'customer_phone' => $request->phone,
+                'status' => 'pending',
+            ]
+        );
+
+        $snapToken = $this->midtrans->createTransactionFromPayment($payment);
+        $payment->snap_token = $snapToken;
+        $payment->save();
+
+        $order = $payment->order;
 
         return response()->json([
             'snap_token' => $snapToken,
-            'order_id' => $order->id,
+            'order_number' => $order->order_number ?? null,
+            'payment_id' => $payment->id,
         ]);
+    }
+
+    // Callback Midtrans untuk update status pembayaran
+    public function callback(Request $request)
+    {
+        $notif = new \Midtrans\Notification();
+
+        $orderNumber = $notif->order_id;
+        $transactionStatus = $notif->transaction_status;
+
+        $payment = Payment::whereHas('order', function ($q) use ($orderNumber) {
+            $q->where('order_number', $orderNumber);
+        })->first();
+
+        if (!$payment) {
+            return response()->json(['error' => 'Payment not found'], 404);
+        }
+
+        if ($transactionStatus == 'settlement') {
+            $payment->status = 'paid';
+            $payment->payment_date = now();
+        } elseif (in_array($transactionStatus, ['deny', 'expire', 'cancel'])) {
+            $payment->status = 'failed';
+        } elseif ($transactionStatus == 'pending') {
+            $payment->status = 'pending';
+        }
+
+        $payment->midtrans_status = $transactionStatus;
+        $payment->midtrans_transaction_id = $notif->transaction_id ?? null;
+        $payment->save();
+
+        return response()->json(['status' => 'ok']);
     }
 }
