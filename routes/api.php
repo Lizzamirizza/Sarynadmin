@@ -12,6 +12,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Api\AddressController;
 
 // Route public
 Route::post('/register', [AuthController::class, 'register']);
@@ -23,6 +24,9 @@ Route::get('/products/category/{categoryId}', [ProductController::class, 'getRel
 
 // Midtrans callback (bebas auth karena dipanggil oleh midtrans)
 Route::post('/midtrans/callback', [MidtransController::class, 'callback']);
+
+Route::get('/provinces', [LocationController::class, 'searchProvinces']);
+Route::get('/cities', [LocationController::class, 'searchCities']);
 
 // Route yang butuh autentikasi
 Route::middleware('auth:sanctum')->group(function () {
@@ -61,4 +65,11 @@ Route::prefix('restockeds')->group(function () {
     Route::get('{id}', [RestockedController::class, 'show']);        
     Route::put('{id}', [RestockedController::class, 'update']);       
     Route::delete('{id}', [RestockedController::class, 'destroy']);   
+
+// Route::prefix('alamat')->group(function () {
+//     Route::get('/provinsi', [AddressController::class, 'getProvinsi']);
+//     Route::get('/kota', [AddressController::class, 'getKota']);
+//     Route::post('/ongkir', [AddressController::class, 'cekOngkir']);
+// });
+
 });
