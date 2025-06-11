@@ -15,7 +15,7 @@ class SalesOverviewWidget extends BaseWidget
     {
         return [
             Stat::make('Total Pendapatan', 'Rp ' . number_format(
-                Payment::where('payment_status', 'settlement')->sum('amount'),
+                Payment::where('status', 'settlement')->sum('amount'),
                 0, ',', '.'
             ))->description('Akumulasi semua pembayaran sukses')->color('success'),
 
