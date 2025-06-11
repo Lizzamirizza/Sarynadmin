@@ -12,9 +12,10 @@ class ProvinceSeeder extends Seeder
     {
         $response = Http::withHeaders([
             'key' => env('RAJAONGKIR_API_KEY'),
-        ])->get('https://sandbox.rajaongkir.com/starter/province');
+        ])->get('https://api-sandbox.collaborator.komerce.id/rajaongkir/province');
 
-        dd($response->json());
+        dd($response->status(), $response->body());
+
 
         foreach ($response['rajaongkir']['results'] as $prov) {
             DB::table('provinces')->insert([

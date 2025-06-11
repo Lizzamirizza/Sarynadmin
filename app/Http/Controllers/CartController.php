@@ -117,4 +117,13 @@ class CartController extends Controller
             'order_id' => $order->id,
         ]);
     }
+
+    public function clear(Request $request)
+    {
+        $user = $request->user();
+        $user->cart()->delete();
+
+        return response()->json(['message' => 'Cart cleared successfully.']);
+    }
+
 }

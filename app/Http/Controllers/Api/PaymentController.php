@@ -4,10 +4,21 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\Order;
 use Illuminate\Http\Request;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class PaymentController extends Controller
 {
+    public function __construct()
+    {
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production', false);
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+    }
+
     public function show($id)
     {
         $payment = Payment::with('order')->findOrFail($id);
@@ -45,7 +56,6 @@ class PaymentController extends Controller
         return response()->json($payment);
     }
 
-    // PaymentController.php
     public function getByOrder($orderId)
     {
         $payment = Payment::where('order_id', $orderId)->first();
@@ -57,4 +67,60 @@ class PaymentController extends Controller
         return response()->json($payment);
     }
 
+    /**
+     * ✅ Generate Midtrans Snap Token
+     */
+    public function getSnapToken(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|integer|exists:orders,id',
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => 'ORDER-' . $order->id . '-' . now()->timestamp,
+                'gross_amount' => $order->total_price ?? 10000, // atau amount dari relasi
+            ],
+            'customer_details' => [
+                'first_name' => $order->customer_name ?? 'Customer',
+                'email' => $order->customer_email ?? 'email@example.com',
+            ],
+        ];
+
+        $snapToken = Snap::getSnapToken($params);
+
+        return response()->json(['token' => $snapToken]);
+    }
+
+    /**
+     * ✅ Terima Notifikasi dari Midtrans
+     */
+    public function handleNotification(Request $request)
+    {
+        $payload = json_decode($request->getContent(), true);
+        $orderId = $payload['order_id'] ?? null;
+        $transactionStatus = $payload['transaction_status'] ?? null;
+        $transactionId = $payload['transaction_id'] ?? null;
+        $paymentDate = now();
+
+        if (!$orderId) {
+            return response()->json(['message' => 'Invalid payload'], 400);
+        }
+
+        // Cari data payment berdasarkan order_id
+        $payment = Payment::where('order_id', explode('-', $orderId)[1] ?? null)->first();
+
+        if ($payment) {
+            $payment->update([
+                'status' => $transactionStatus,
+                'payment_date' => $paymentDate,
+                'midtrans_status' => $transactionStatus,
+                'midtrans_transaction_id' => $transactionId,
+            ]);
+        }
+
+        return response()->json(['message' => 'Notification handled']);
+    }
 }

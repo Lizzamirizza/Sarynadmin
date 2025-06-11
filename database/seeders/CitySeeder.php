@@ -12,7 +12,7 @@ class CitySeeder extends Seeder
     {
         $response = Http::withHeaders([
             'key' => env('RAJAONGKIR_API_KEY'),
-        ])->get('https://sandbox.rajaongkir.com/starter/city');
+        ])->get('https://api-sandbox.collaborator.komerce.id/starter/city');
 
         foreach ($response['rajaongkir']['results'] as $city) {
             DB::table('cities')->insert([

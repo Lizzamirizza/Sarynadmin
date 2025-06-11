@@ -32,6 +32,7 @@ Route::get('/cities', [LocationController::class, 'searchCities']);
 Route::middleware('auth:sanctum')->group(function () {
     // User
     Route::get('/user/profile', [UserController::class, 'profile']);
+    Route::put('/user/profile', [UserController::class, 'profile']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Cart
@@ -40,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/cart/{cartItem}', [CartController::class, 'update']);
     Route::delete('/cart/{cartItem}', [CartController::class, 'destroy']);
     Route::post('/cart/checkout', [CartController::class, 'checkout']);
+    Route::delete('/cart/clear', [CartController::class, 'clear']);
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index']);
@@ -56,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Midtrans snap token
     Route::post('/midtrans/snap-token', [MidtransController::class, 'createSnapToken']);
+    Route::post('/midtrans/notification', [PaymentController::class, 'handleNotification']);
 });
 
 // Restocked routes
